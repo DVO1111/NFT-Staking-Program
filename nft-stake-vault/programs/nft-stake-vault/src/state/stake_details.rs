@@ -95,6 +95,10 @@ impl Details {
             .checked_sub(last_reward_time)
             .ok_or(StakeError::ProgramSubError)? as u128; // directly converting to u128 since it can't be negative
 
+        // FIX: Defense-in-depth guard against division by zero
+        // This catches edge cases where staking_ends_at == last_reward_change_time
+        require!(base > 0, StakeError::ProgramDivError);
+
         let weight_time = stake_time.max(last_reward_time);
 
         let mut num = self.staking_ends_at

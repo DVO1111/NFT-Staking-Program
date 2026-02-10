@@ -42,7 +42,10 @@ pub fn change_reward_handler(ctx: Context<ChangeReward>, new_reward: u64) -> Res
     let current_reward = *stake_details.reward.last().unwrap();
     let last_reward_change_time = *stake_details.reward_change_time.last().unwrap();
 
-    require_gte!(staking_ends_at, current_time, StakeError::StakingIsOver);
+    // FIX: Use strict greater-than to prevent division by zero in update_staked_weight
+    // When current_time == staking_ends_at, the reward change would set
+    // last_reward_change_time = staking_ends_at, causing base = 0 in weight calculation
+    require_gt!(staking_ends_at, current_time, StakeError::StakingIsOver);
     require_eq!(staking_status, true, StakeError::StakingInactive);
 
     let (current_actual_balance, new_staked_weight) = calc_actual_balance(
